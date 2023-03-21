@@ -1,0 +1,112 @@
+---
+title: "Data Analysis on financial/health-related effect of Storms in US"
+author: "Andrew Crena"
+date: "2023-03-21"
+output: html_document
+---
+# Reproducible Research Assignment 2
+## Synopsis
+## In this assignment, we will be analyzing data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database.More specifically, we want to further understand the econonmic and health-related ramifications of various types of natural disaster events. By identifying certain types of storms and the various degrees of damge they cause, we can better prepare for the future.
+
+
+## Data Processing
+### First, we will load in the data, and get a better understanding of what we are looking at.
+```{r, load data}
+setwd("~/R_Programming/DATASETS")
+noaaDF <- read.csv(bzfile('repdata_data_StormData.csv.bz2'),header=TRUE, stringsAsFactors = FALSE)
+str(noaaDF)
+```
+
+### Next, we will load the packages  necessary.
+```{r package load, echo+FALSE}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+```
+## Question 1
+### After reading the structure of the data, we will now address the first question of the health-related effects, focusing on fatality and injury data.
+```{r fatalities, echo=TRUE}
+totalfat <- aggregate(noaaDF$FATALITIES, by = list(noaaDF$EVTYPE), "sum")
+names(totalfat) <- c("Event", "Fatalities")
+totalfatsorted <- totalfat[order(-totalfat$Fatalities), ][1:20, ]
+totalfatsorted
+```
+
+#### now, for injuries
+```{r injuries, echo=TRUE}
+totalinj <- aggregate(noaaDF$INJURIES, by = list(noaaDF$EVTYPE), "sum")
+names(totalinj) <- c("Event", "Injuries")
+totalinjsorted <- totalinj[order(-totalinj$Injuries), ][1:20, ]
+totalinjsorted
+```
+
+### I am going to use bar plots to observe what events are considered the biggest threat to population health via Injuries and Fatalities
+```{r, plothealth, echo+TRUE}
+par(mfrow = c(1, 2), mar = c(10, 4, 2, 2), las = 3, cex = 0.7,
+    cex.main = 1.4, cex.lab = 1.2)
+barplot(totalfatsorted$Fatalities, names.arg = totalfatsorted$Event,
+        col = 'red', main = 'Top 20 Weather Events for Fatalities',
+        ylab = 'Number of Fatalities')
+barplot(totalinjsorted$Injuries, names.arg = totalinjsorted$Event,
+        col = 'orange', main = 'Top 20 Weather Events for Injuries',
+        ylab = 'Number of Injuries')
+```
+
+
+### The graphs show that tornadoes are the most harmful events in terms of fatalities and injuries accrued from the event. While tornadoes top this list, it is worth noting that events related to flooding (flash floods, floods) and heat(excessive heat, heat) appear to be the next most harmful tpes of events.
+
+
+## Question 2
+## We now want to observe the economic factor to our assignment. For this analysis, I will measure the ramifications based off of damage to property and crops. We will use a similar strategy as the first question when working with the data.
+### First, we will calculate property damage
+```{r property damage, echo=TRUE}
+totalpropdam <- aggregate(noaaDF$PROPDMG, by = list(noaaDF$EVTYPE), "sum")
+names(totalpropdam) <- c("Event", "Property")
+totalpropsorted <- totalpropdam[order(-totalpropdam$Property), ][1:20, ]
+totalpropsorted
+```
+#### next, for damage to crops!
+```{r crop damage, echo=TRUE}
+totalcropdam <- aggregate(noaaDF$CROPDMG, by = list(noaaDF$EVTYPE), "sum")
+names(totalcropdam) <- c("Event", "Crop")
+totalcropsorted <- totalcropdam[order(-totalcropdam$Crop), ][1:20, ]
+totalcropsorted
+```
+
+
+### Just as I did for question 1, we will put two bar plots on the same plot in order to visualize our data in relation to property and crop damage.
+```{r, plotecon, echo=TRUE}
+par(mfrow = c(1, 2), mar = c(10, 4, 2, 2), las = 3, cex = 0.7,
+    cex.main = 1.4, cex.lab = 1.2)
+barplot(totalpropsorted$Property, names.arg = totalpropsorted$Event,
+        col = 'Green', main = 'Top 20 Weather Events for Property Damage ',
+        ylab = 'Amount of Property Damage', ylim = c(0, 3500000))
+barplot(totalcropsorted$Crop, names.arg = totalcropsorted$Event,
+        col = 'Yellow',main = 'Top 20 Weather Events for Crop Damage',
+        ylab = 'Amount of  Crop Damage', ylim = c(0, 3500000))
+```
+
+
+### Now, let's combine crop and property damage, in order to further understand the difference in total damage accrued by each.
+```{r, total damage, echo=TRUE}
+totalevcost <- aggregate(noaaDF$CROPDMG+noaaDF$PROPDMG,
+                         by = list(noaaDF$EVTYPE), "sum")
+names(totalevcost) <- c("Event", "TotalCost")
+totalcostsorted <- totalevcost[order(-totalevcost$TotalCost), ][1:20, ]
+totalcostsorted
+```
+### This will allow us to make our final plot, showing total damage from crops and properties combined.
+```{r, plot total cost, echo=TRUE}
+par(mfrow = c(1,1), mar = c(10, 4, 2, 2), las = 3, cex = 0.7,
+    cex.main = 1.4, cex.lab = 1.2)
+barplot(totalcostsorted$TotalCost, names.arg = totalcostsorted$Event,
+        col = 'Purple',main = 'Top 20 Weather Events for total Damage ',
+        ylab = 'Amount of total Damage', ylim = c(0, 3500000))
+```
+
+
+### The bar plot shows that tornadoes, similar to health-related damage, are the most harmful in terms of economic effect. It is important to remember that the complexities of the financial damage that comes after these events is difficult to fully understand, but this gives us a good idea of the ramifications.
+
+## Results
+### After analyzing the damage of certain natural disasters, tornadoes appear to be the most harmful not only in terms of health (fatalities/injuries), but in terms of economic damage as well (damage to property and crops)
